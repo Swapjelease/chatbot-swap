@@ -96,9 +96,10 @@ llm = OpenAI(temperature=0, openai_api_key=openai_api_key, model_name="gpt-3.5-t
 llm_chain = LLMChain(llm=llm, prompt=custom_prompt)
 combine_docs_chain = StuffDocumentsChain(
     llm_chain=llm_chain,
-    document_variable_name="context",
-    input_key="question"
+    document_variable_name="context"
 )
+combine_docs_chain.input_key = "question"
+
 qa_chain = RetrievalQA(
     retriever=vectorstore.as_retriever(),
     combine_documents_chain=combine_docs_chain
