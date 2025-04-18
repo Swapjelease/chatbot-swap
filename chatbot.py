@@ -26,7 +26,7 @@ st.markdown("""
         font-size: 1.05rem;
         font-weight: 500;
         color: #333;
-        margin-bottom: 1.5rem;
+        margin-bottom: 1rem;
     }
     .stTextInput > div > input {
         font-size: 16px;
