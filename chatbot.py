@@ -20,7 +20,7 @@ st.markdown("""
             font-weight: 600;
         }
         .block-container {
-            padding-top: 1rem;
+            padding-top: 0.5rem;
         }
         .stTextInput>div>div>input {
             font-family: 'Quicksand', sans-serif;
