@@ -1,100 +1,115 @@
+# chatbot.py
 import os
 import zipfile
 import streamlit as st
 from langchain_community.vectorstores import FAISS
 from langchain_community.embeddings import OpenAIEmbeddings
-from langchain_community.llms import OpenAI
-from langchain.prompts import PromptTemplate
+from langchain_openai import ChatOpenAI
+from langchain_core.prompts import ChatPromptTemplate
 from langchain.chains.combine_documents import create_stuff_documents_chain
-from langchain.chat_models import ChatOpenAI
-from langchain.retrievers.multi_query import MultiQueryRetriever
+from langchain.chains import ConversationalRetrievalChain
+from langchain.memory import ConversationBufferMemory
+from langchain_core.output_parsers import StrOutputParser
 
-# 🔧 Pagina setup
+# 1. Pagina setup
 st.set_page_config(page_title="Swap Assistent", page_icon="🚗", layout="wide")
 
-# 🎨 Stijl
+# 2. Stijl en fonts injecteren
 st.markdown("""
-    <style>
-        body { font-family: 'Open Sans', sans-serif; }
-        .swap-title h1 {
-            font-family: 'Quicksand', sans-serif;
-            font-weight: 700;
-            font-size: 1.8rem;
-            color: #005F9E;
-            margin: 0;
-        }
-        .swap-sub {
-            font-family: 'Quicksand', sans-serif;
-            font-weight: 500;
-            font-size: 1rem;
-            color: #000;
-            margin-top: 0.2rem;
-        }
-    </style>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@600&display=swap');
+
+    html, body, [class*="css"]  {
+        font-family: 'Open Sans', sans-serif;
+    }
+    .title-wrapper h1 {
+        font-family: 'Quicksand', sans-serif;
+        font-size: 1.6rem;
+        font-weight: 600;
+        color: #005F9E;
+        margin: 0;
+    }
+    .subtitle {
+        font-size: 1rem;
+        margin-top: 0.2rem;
+    }
+</style>
 """, unsafe_allow_html=True)
 
-# 🧾 Titel
+# 3. Header
 st.markdown("""
-    <div class="swap-title">
-        <h1>🚗 Stel je vraag aan onze Swap Assistent!</h1>
-        <div class="swap-sub">Snel en simpel antwoord over leasecontracten en auto-aanbod</div>
-    </div>
+<div class="title-wrapper">
+    <h1>🚗 Stel je vraag aan onze Swap Assistent!</h1>
+    <div class="subtitle">Direct antwoord op al je vragen. Helder en zonder gedoe.</div>
+</div>
 """, unsafe_allow_html=True)
 
-# 🔐 API key ophalen
+# 4. API key ophalen
 openai_api_key = os.getenv("OPENAI_API_KEY")
 if not openai_api_key:
-    st.error("❌ OpenAI API key ontbreekt. Voeg deze toe via 'Edit secrets'.")
+    st.error("❌ OpenAI API key ontbreekt. Voeg deze toe bij 'Edit secrets'.")
     st.stop()
 
-# 📂 Vectorstore zip uitpakken
+# 5. Unzip vectorstore als nog niet uitgepakt
 zip_path = "faiss_klantvragen_db.zip"
-extract_path = "faiss_klantvragen_db"
-if not os.path.exists(extract_path):
-    if os.path.exists(zip_path):
-        with zipfile.ZipFile(zip_path, "r") as zip_ref:
-            zip_ref.extractall()
-    else:
-        st.error("❌ Zipbestand 'faiss_klantvragen_db.zip' niet gevonden.")
-        st.stop()
+unzip_dir = "faiss_klantvragen_db"
+if not os.path.exists(unzip_dir):
+    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+        zip_ref.extractall()
 
-# 📦 Vectorstore laden
+# 6. Laad vectorstore
 @st.cache_resource
-def load_vectorstore(api_key):
-    embeddings = OpenAIEmbeddings(openai_api_key=api_key)
+def load_vectorstore():
+    embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)
     return FAISS.load_local(
-        extract_path,
-        embeddings,
-        allow_dangerous_deserialization=True
+        unzip_dir, embeddings, allow_dangerous_deserialization=True
     )
 
-vectorstore = load_vectorstore(openai_api_key)
+vectorstore = load_vectorstore()
 
-# 🧠 Prompt
-custom_prompt = PromptTemplate.from_template("""
-Je bent de AI-assistent van Swap Je Lease. Help gebruikers helder, vriendelijk en kort met vragen over leaseoverdracht.
-Gebruik geen moeilijke woorden en spreek de gebruiker aan met 'je'.
-Geef indien nodig concrete stappen of een voorbeeld.
+# 7. Conversatie-geheugen instellen
+memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
 
-Context: {context}
+# 8. Template voor de assistent
+prompt = ChatPromptTemplate.from_messages([
+    ("system", "Je bent de AI-assistent van Swap Je Lease. Antwoord vriendelijk, kort en duidelijk. Gebruik eenvoudige taal en spreek de gebruiker aan met 'je'."),
+    ("human", "{question}")
+])
 
-Vraag: {question}
-""")
+# 9. Language Model instellen
+llm = ChatOpenAI(temperature=0.2, model_name="gpt-3.5-turbo", api_key=openai_api_key)
 
-# 🔗 Chains en retrieval
-llm = OpenAI(temperature=0, openai_api_key=openai_api_key, model_name="gpt-3.5-turbo")
-combine_docs_chain = create_stuff_documents_chain(llm=llm, prompt=custom_prompt)
-
-# 🔎 Slimmere multi-query retriever
-multiquery_retriever = MultiQueryRetriever.from_llm(
+# 10. Conversational QA chain
+qa_chain = ConversationalRetrievalChain.from_llm(
+    llm=llm,
     retriever=vectorstore.as_retriever(),
-    llm=ChatOpenAI(openai_api_key=openai_api_key, temperature=0, model_name="gpt-3.5-turbo")
+    memory=memory,
+    combine_docs_chain=create_stuff_documents_chain(llm=llm, prompt=prompt),
+    return_source_documents=True,
+    verbose=False
 )
 
-# 💬 Vraag input
-vraag = st.text_input("Wat wil je weten?", placeholder="Bijv. Hoe kan ik mijn leasecontract overzetten?")
+# 11. Vraag invoer
+vraag = st.text_input("Wat wil je weten?", placeholder="Bijv. Hoe zet ik mijn lease over?")
+
+# 12. Verwerking van vraag
 if vraag:
     with st.spinner("Even kijken..."):
-        documenten = multiquery_retriever.get_relevant_documents(vraag)
-        resultaat = combine_docs_chain.invoke({"context": documenten, "question": vraag})
-        st.success(resultaat)
+        try:
+            response = qa_chain.invoke({"question": vraag})
+            antwoord = response["answer"]
+            bronnen = response.get("source_documents", [])
+
+            st.success(antwoord)
+
+            # 13. Bronnen tonen als knoppen
+            if bronnen:
+                with st.expander("🔍 Gebruikte bronnen"):
+                    for doc in bronnen:
+                        st.markdown(f"- `{doc.metadata.get('source', 'onbekend')}`")
+
+        except Exception as e:
+            st.error(f"Er ging iets mis: {str(e)}")
+
+# 14. Logging idee (optioneel uitbreidbaar met externe logging)
+# st.write("[Log]", vraag)
