@@ -1,3 +1,4 @@
+st.image("logo.png", width=150)
 import os
 import zipfile
 import streamlit as st
