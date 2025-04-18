@@ -5,7 +5,6 @@ from langchain_community.vectorstores import FAISS
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain.prompts import PromptTemplate
 from langchain.chains import RetrievalQA
-from langchain.chains.combine_documents import create_stuff_documents_chain
 
 # 📄 Zet als eerste de pagina-instellingen
 st.set_page_config(page_title="Swap Assistent", page_icon="🚗", layout="wide")
@@ -74,8 +73,12 @@ Vraag: {question}
 
 # 🤖 LLM en retrieval chain
 llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0, openai_api_key=openai_api_key)
-combine_docs_chain = create_stuff_documents_chain(llm=llm, prompt=prompt)
-qa_chain = RetrievalQA(combine_documents_chain=combine_docs_chain, retriever=vectorstore.as_retriever())
+qa_chain = RetrievalQA.from_chain_type(
+    llm=llm,
+    retriever=vectorstore.as_retriever(),
+    chain_type="stuff",
+    chain_type_kwargs={"prompt": prompt}
+)
 
 # 💬 Vraag
 vraag = st.text_input("Wat wil je weten?", placeholder="Bijv. Hoe kan ik mijn leasecontract overzetten?")
