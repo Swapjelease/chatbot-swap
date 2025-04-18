@@ -16,7 +16,7 @@ st.markdown("""
             font-family: 'Quicksand', sans-serif;
         }
         h1 {
-            font-size: 1.8rem;
+            font-size: 2rem;
             font-weight: bold;
             color: #005F9E;
         }
@@ -26,7 +26,7 @@ st.markdown("""
             margin-bottom: 2rem;
         }
         .stTextInput > div > input {
-            font-size: 24px;
+            font-size: 16px;
             padding: 0.5rem;
         }
     </style>
@@ -34,7 +34,7 @@ st.markdown("""
 
 # 🧾 Titel en subtitel
 st.markdown("🚗 **Stel je vraag aan onze Swap Assistent!**")
-st.markdown("<div class='subtitle'>Snel antwoord over leasecontracten en het aanbieden van je auto</div>", unsafe_allow_html=True)
+st.markdown("<div class='subtitle'>Direct antwoord op al je vragen. Helder en zonder gedoe.</div>", unsafe_allow_html=True)
 
 # 🔐 OpenAI key
 openai_api_key = os.getenv("OPENAI_API_KEY")
@@ -81,7 +81,7 @@ qa_chain = RetrievalQA.from_chain_type(
 )
 
 # 💬 Vraag
-vraag = st.text_input("Wat wil je weten?", placeholder="Bijv. Hoe kan ik mijn leasecontract overzetten?")
+vraag = st.text_input("Wat wil je weten?", placeholder="Bijv. Hoe kan ik mijn leaseauto aanbieden?")
 if vraag:
     with st.spinner("Even kijken..."):
         resultaat = qa_chain.invoke({"query": vraag})
