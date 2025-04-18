@@ -10,7 +10,8 @@ from langchain.chains.combine_documents import create_stuff_documents_chain
 
 # 🔍 Streamlit pagina setup
 st.set_page_config(page_title="Swap Assistent", page_icon="🚗", layout="wide")
-st.image("logo.png", width=150)
+with st.sidebar:
+    st.image("logo.png", width=150)
 
 # 🎨 Stijl injectie
 st.markdown("""
