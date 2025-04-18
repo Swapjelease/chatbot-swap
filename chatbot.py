@@ -16,7 +16,7 @@ st.markdown("""
             font-family: 'Quicksand', sans-serif;
         }
         h1 {
-            font-size: 2rem;
+            font-size: 8rem;
             font-weight: bold;
             color: #005F9E;
         }
