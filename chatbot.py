@@ -3,24 +3,46 @@ import zipfile
 import streamlit as st
 from langchain_community.vectorstores import FAISS
 from langchain_community.embeddings import OpenAIEmbeddings
-from langchain_community.llms import OpenAI
+from langchain_openai import ChatOpenAI
 from langchain.prompts import PromptTemplate
 from langchain.chains import RetrievalQA
+from langchain.chains.combine_documents import create_stuff_documents_chain
 
-# 🔍 Streamlit pagina setup
+# 📄 Pagina instellingen
 st.set_page_config(page_title="Swap Assistent", page_icon="🚗", layout="wide")
-st.title("🚗 Stel je vraag aan onze Swap Assistent!")
-st.caption("Altijd snel een antwoord.")
 
-# 🔐 API key ophalen
+# 💅 Stijl en lettertype
+st.markdown("""
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@600&display=swap" rel="stylesheet">
+    <style>
+        html, body {
+            font-family: 'Quicksand', sans-serif;
+            font-weight: 600;
+        }
+        .block-container {
+            padding-top: 2rem;
+        }
+        .stTextInput>div>div>input {
+            font-family: 'Quicksand', sans-serif;
+            font-weight: 600;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
+# 🟦 Titel
+st.title("🚗 Stel je vraag aan onze Swap Assistent!")
+st.caption("Snel antwoord over leasecontracten en het aanbieden van je auto")
+
+# 🔐 OpenAI API key
 openai_api_key = os.getenv("OPENAI_API_KEY")
 if not openai_api_key:
-    st.error("❌ OpenAI API key ontbreekt. Voeg deze toe bij 'Edit secrets'.")
+    st.error("❌ OpenAI API key ontbreekt. Voeg deze toe via 'Edit secrets'.")
     st.stop()
 
-# 📂 Vectorstore zip uitpakken
+# 🧠 Vectorstore laden
 zip_path = "faiss_klantvragen_db.zip"
 extract_path = "faiss_klantvragen_db"
+
 if not os.path.exists(extract_path):
     if os.path.exists(zip_path):
         with zipfile.ZipFile(zip_path, "r") as zip_ref:
@@ -29,7 +51,6 @@ if not os.path.exists(extract_path):
         st.error("❌ Zipbestand 'faiss_klantvragen_db.zip' niet gevonden.")
         st.stop()
 
-# 🧠 Laad vectorstore
 @st.cache_resource
 def load_vectorstore(api_key):
     embeddings = OpenAIEmbeddings(openai_api_key=api_key)
@@ -41,9 +62,12 @@ def load_vectorstore(api_key):
 
 vectorstore = load_vectorstore(openai_api_key)
 
-# ✨ Prompt met verplicht veld 'context'
+# 🧠 LLM instellen met ChatOpenAI
+llm = ChatOpenAI(model="gpt-3.5-turbo", openai_api_key=openai_api_key, temperature=0)
+
+# 📝 Prompt
 custom_prompt = PromptTemplate.from_template("""
-Je bent de AI-assistent van Swap Je Lease. Help gebruikers helder, vriendelijk en kort met vragen over leaseoverdracht.
+Je bent de AI-assistent van Swap Je Lease. Help gebruikers vriendelijk, helder en kort met vragen over leaseoverdracht.
 Gebruik geen moeilijke woorden en spreek de gebruiker aan met 'je'.
 Geef indien nodig concrete stappen of een voorbeeld.
 
@@ -52,9 +76,7 @@ Context: {context}
 Vraag: {question}
 """)
 
-# 🧑‍‍🧓 LLM + Retrieval koppelen
-llm = OpenAI(temperature=0, openai_api_key=openai_api_key, model_name="gpt-3.5-turbo")
-
+# 🔁 Retrieval QA chain
 qa_chain = RetrievalQA.from_chain_type(
     llm=llm,
     retriever=vectorstore.as_retriever(),
@@ -62,7 +84,7 @@ qa_chain = RetrievalQA.from_chain_type(
     chain_type_kwargs={"prompt": custom_prompt}
 )
 
-# 💬 Vraag
+# 💬 Gebruikersinput
 vraag = st.text_input("Wat wil je weten?", placeholder="Bijv. Hoe kan ik mijn leasecontract overzetten?")
 if vraag:
     with st.spinner("Even kijken..."):
