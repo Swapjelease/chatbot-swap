@@ -1,28 +1,74 @@
 import os
-import streamlit as st
 import zipfile
+import streamlit as st
 from langchain_community.vectorstores import FAISS
 from langchain_community.embeddings import OpenAIEmbeddings
 from langchain_community.llms import OpenAI
 from langchain.chains import RetrievalQA
 
-# 🧠 Streamlit instellingen
-st.set_page_config(page_title="Swap Je Lease Assistent", page_icon="🚗")
-st.title("🚗 Swap Je Lease Assistent")
-st.markdown("Stel hier je vraag over het aanbieden of overnemen van een leaseauto.")
+# 📐 Pagina setup
+st.set_page_config(page_title="Swap Assistent", page_icon="🚗", layout="wide")
 
-# 🔐 API key ophalen uit omgeving
+# 🎨 Stijl injectie
+st.markdown("""
+    <style>
+        body { font-family: 'Open Sans', sans-serif; }
+        .swap-header { 
+            display: flex; 
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        .swap-logo {
+            width: 80px;
+            margin-right: 1rem;
+        }
+        .swap-title h1 {
+            font-family: 'Quicksand', sans-serif;
+            font-size: 1.8rem;
+            color: #005F9E;
+            margin: 0;
+        }
+        .swap-sub {
+            font-size: 1rem;
+            color: #000;
+            margin-top: 0.2rem;
+        }
+        .block-container {
+            padding-top: 2rem;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
+# 🖼️ Logo + Titel
+st.markdown("""
+    <div class="swap-header">
+        <img src="logo.png" class="swap-logo">
+        <div class="swap-title">
+            <h1>Stel je vraag aan onze Swap Assistent!</h1>
+            <div class="swap-sub">Altijd snel antwoord over leaseoverdracht</div>
+        </div>
+    </div>
+""", unsafe_allow_html=True)
+
+# 🔐 API key
 openai_api_key = os.getenv("OPENAI_API_KEY")
 if not openai_api_key:
-    st.error("❌ OpenAI API key ontbreekt. Voeg deze toe als Streamlit secret (OPENAI_API_KEY).")
+    st.error("❌ OpenAI API key ontbreekt. Voeg deze toe bij 'Edit secrets' op Streamlit.")
     st.stop()
 
-# 📦 Zip uitpakken als vectorstore map nog niet bestaat
-if not os.path.exists("faiss_klantvragen_db") and os.path.exists("faiss_klantvragen_db.zip"):
-    with zipfile.ZipFile("faiss_klantvragen_db.zip", "r") as zip_ref:
-        zip_ref.extractall("faiss_klantvragen_db")
+# 📦 Vectorstore zip uitpakken
+zip_path = "faiss_klantvragen_db.zip"
+extract_path = "faiss_klantvragen_db"
 
-# 🧠 Laad vectorstore
+if not os.path.exists(extract_path):
+    if os.path.exists(zip_path):
+        with zipfile.ZipFile(zip_path, "r") as zip_ref:
+            zip_ref.extractall()
+    else:
+        st.error("❌ Zipbestand 'faiss_klantvragen_db.zip' niet gevonden.")
+        st.stop()
+
+# 🧠 Vectorstore laden
 @st.cache_resource
 def load_vectorstore(api_key):
     embeddings = OpenAIEmbeddings(openai_api_key=api_key)
@@ -32,23 +78,25 @@ def load_vectorstore(api_key):
         allow_dangerous_deserialization=True
     )
 
-# 🔄 Initialiseer LLM en QA-chain
+# 🤖 Setup AI
 vectorstore = load_vectorstore(openai_api_key)
-llm = OpenAI(temperature=0, openai_api_key=openai_api_key)
-
+llm = OpenAI(
+    temperature=0,
+    openai_api_key=openai_api_key,
+    model_name="gpt-3.5-turbo"
+)
 qa_chain = RetrievalQA.from_chain_type(
     llm=llm,
     chain_type="stuff",
-    retriever=vectorstore.as_retriever()
+    retriever=vectorstore.as_retriever(),
+    chain_type_kwargs={
+        "prompt": """Je bent de AI-assistent van Swap Je Lease. Help gebruikers helder, vriendelijk en kort met vragen over leaseoverdracht. Gebruik geen moeilijke woorden en spreek de gebruiker aan met 'je'. Geef indien nodig stappen of voorbeelden. Geen onnodige uitleg."""
+    }
 )
 
-# 💬 Vraag van gebruiker
-vraag = st.text_input("💬 Typ je vraag:")
-
+# 💬 Input
+vraag = st.text_input("Wat wil je weten?", placeholder="Bijv. Hoe kan ik mijn leasecontract overzetten?")
 if vraag:
-    with st.spinner("🧠 Bezig met zoeken..."):
+    with st.spinner("Even kijken..."):
         antwoord = qa_chain.run(vraag)
         st.success(antwoord)
-
-# Subtiele afsluiter
-st.caption("Swap Je Lease Klantenservice")
