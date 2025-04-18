@@ -9,7 +9,7 @@ from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 from langchain.chains.combine_documents.stuff import StuffDocumentsChain
 
-# 🔍 Streamlit pagina setup
+# 🌐 Streamlit pagina setup
 st.set_page_config(page_title="Swap Assistent", page_icon="🚗", layout="wide")
 
 # 🎨 Stijl injectie
@@ -42,7 +42,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# 🖼️ Header met logo en titel
+# 🧾 Header met logo en tekst
 st.markdown("""
     <div class="swap-header">
         <img src="logo.png" class="swap-logo">
@@ -53,13 +53,13 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# 🔐 API key ophalen
+# 🔐 API-key ophalen
 openai_api_key = os.getenv("OPENAI_API_KEY")
 if not openai_api_key:
     st.error("❌ OpenAI API key ontbreekt. Voeg deze toe bij 'Edit secrets'.")
     st.stop()
 
-# 📂 Vectorstore zip uitpakken
+# 📦 Vectorstore uitpakken
 zip_path = "faiss_klantvragen_db.zip"
 extract_path = "faiss_klantvragen_db"
 if not os.path.exists(extract_path):
@@ -70,7 +70,7 @@ if not os.path.exists(extract_path):
         st.error("❌ Zipbestand 'faiss_klantvragen_db.zip' niet gevonden.")
         st.stop()
 
-# 🧠 Laad vectorstore
+# 📚 Laad vectorstore
 @st.cache_resource
 def load_vectorstore(api_key):
     embeddings = OpenAIEmbeddings(openai_api_key=api_key)
@@ -82,7 +82,7 @@ def load_vectorstore(api_key):
 
 vectorstore = load_vectorstore(openai_api_key)
 
-# 🌟 Custom prompt
+# ✨ Prompt
 custom_prompt = PromptTemplate.from_template("""
 Je bent de AI-assistent van Swap Je Lease. Help gebruikers helder, vriendelijk en kort met vragen over leaseoverdracht.
 Gebruik geen moeilijke woorden en spreek de gebruiker aan met 'je'.
@@ -91,21 +91,17 @@ Geef indien nodig concrete stappen of een voorbeeld.
 Vraag: {question}
 """)
 
-# 🧑‍🧳 LLM + Retrieval koppelen
+# 🤖 LLM + Retrieval koppelen
 llm = OpenAI(temperature=0, openai_api_key=openai_api_key, model_name="gpt-3.5-turbo")
 llm_chain = LLMChain(llm=llm, prompt=custom_prompt)
-combine_docs_chain = StuffDocumentsChain(
-    llm_chain=llm_chain,
-    document_variable_name="context"
-)
-combine_docs_chain.input_key = "question"
+combine_docs_chain = StuffDocumentsChain.from_llm_chain(llm_chain)
 
 qa_chain = RetrievalQA(
     retriever=vectorstore.as_retriever(),
     combine_documents_chain=combine_docs_chain
 )
 
-# 💬 Vraag
+# 📥 Gebruikersvraag
 vraag = st.text_input("Wat wil je weten?", placeholder="Bijv. Hoe kan ik mijn leasecontract overzetten?")
 if vraag:
     with st.spinner("Even kijken..."):
