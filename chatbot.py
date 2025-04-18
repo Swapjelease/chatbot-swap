@@ -6,46 +6,46 @@ from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain.prompts import PromptTemplate
 from langchain.chains import RetrievalQA
 
-# 🎯 Pagina-instellingen
+# 🌐 Pagina-instellingen
 st.set_page_config(page_title="Swap Assistent", page_icon="🚗", layout="wide")
 
-# 🖋️ Quicksand SemiBold importeren via Google Fonts
+# 💅 Quicksand SemiBold + aangepaste styling
 st.markdown("""
-    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@600&display=swap" rel="stylesheet">
-    <style>
-        * {
-            font-family: 'Quicksand', sans-serif;
-        }
-        h1 {
-            font-size: 1rem;
-            font-weight: 500;  /* SemiBold */
-            color: #005F9E;
-            margin-bottom: 0.3rem;
-        }
-        .subtitle {
-            font-size: 1.1rem;
-            font-weight: 500;
-            color: #444;
-            margin-bottom: 0.5rem;
-        }
-        .stTextInput > div > input {
-            font-size: 16px;
-            padding: 0.5rem;
-        }
-    </style>
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@600&display=swap" rel="stylesheet">
+<style>
+    * {
+        font-family: 'Quicksand', sans-serif;
+    }
+    .title {
+        font-size: 1.6rem;
+        font-weight: 600;
+        color: #005F9E;
+        margin-bottom: 0.3rem;
+    }
+    .subtitle {
+        font-size: 1.05rem;
+        font-weight: 500;
+        color: #333;
+        margin-bottom: 1.5rem;
+    }
+    .stTextInput > div > input {
+        font-size: 16px;
+        padding: 0.5rem;
+    }
+</style>
 """, unsafe_allow_html=True)
 
 # 🧾 Titel & subtitel
-st.markdown("<h1>🚗 Stel je vraag aan onze Swap Assistent!</h1>", unsafe_allow_html=True)
+st.markdown("<div class='title'>🚗 Stel je vraag aan onze Swap Assistent!</div>", unsafe_allow_html=True)
 st.markdown("<div class='subtitle'>Direct antwoord op al je vragen. Helder en zonder gedoe.</div>", unsafe_allow_html=True)
 
-# 🔐 API-sleutel ophalen
+# 🔑 OpenAI API key ophalen
 openai_api_key = os.getenv("OPENAI_API_KEY")
 if not openai_api_key:
-    st.error("❌ OpenAI API key ontbreekt. Voeg deze toe via 'Settings > Secrets'.")
+    st.error("❌ OpenAI API key ontbreekt. Voeg deze toe via Settings > Secrets.")
     st.stop()
 
-# 📦 FAISS zipbestand uitpakken als nodig
+# 📦 FAISS database uitpakken indien nodig
 zip_path = "faiss_klantvragen_db.zip"
 extract_path = "faiss_klantvragen_db"
 if not os.path.exists(extract_path):
@@ -53,10 +53,10 @@ if not os.path.exists(extract_path):
         with zipfile.ZipFile(zip_path, "r") as zip_ref:
             zip_ref.extractall()
     else:
-        st.error("❌ Zipbestand 'faiss_klantvragen_db.zip' niet gevonden.")
+        st.error("❌ Databasebestand 'faiss_klantvragen_db.zip' niet gevonden.")
         st.stop()
 
-# 🧠 Vectorstore laden
+# 📚 Vectorstore laden
 @st.cache_resource
 def load_vectorstore(api_key):
     embeddings = OpenAIEmbeddings(openai_api_key=api_key)
@@ -64,7 +64,7 @@ def load_vectorstore(api_key):
 
 vectorstore = load_vectorstore(openai_api_key)
 
-# ✨ Prompt template
+# 📄 Prompt template
 prompt = PromptTemplate.from_template("""
 Je bent de AI-assistent van Swap Je Lease. Help gebruikers helder, vriendelijk en kort met vragen over leaseoverdracht.
 Gebruik geen moeilijke woorden en spreek de gebruiker aan met 'je'.
@@ -74,7 +74,7 @@ Context: {context}
 Vraag: {question}
 """)
 
-# 🤖 LLM en retrieval chain
+# 🤖 OpenAI LLM koppelen
 llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0, openai_api_key=openai_api_key)
 qa_chain = RetrievalQA.from_chain_type(
     llm=llm,
@@ -83,7 +83,7 @@ qa_chain = RetrievalQA.from_chain_type(
     chain_type_kwargs={"prompt": prompt}
 )
 
-# 💬 Gebruikersinvoer
+# 💬 Vraaginvoer
 vraag = st.text_input("Wat wil je weten?", placeholder="Bijv. Hoe kan ik mijn leaseauto aanbieden?")
 if vraag:
     with st.spinner("Even kijken..."):
