@@ -6,6 +6,8 @@ from langchain_community.embeddings import OpenAIEmbeddings
 from langchain_community.llms import OpenAI
 from langchain.chains import RetrievalQA
 from langchain.prompts import PromptTemplate
+from langchain.chains import LLMChain
+from langchain.chains.combine_documents.stuff import StuffDocumentsChain
 
 # 🔍 Streamlit pagina setup
 st.set_page_config(page_title="Swap Assistent", page_icon="🚗", layout="wide")
@@ -91,12 +93,9 @@ Vraag: {question}
 
 # 🧑‍🧳 LLM + Retrieval koppelen
 llm = OpenAI(temperature=0, openai_api_key=openai_api_key, model_name="gpt-3.5-turbo")
-qa_chain = RetrievalQA.from_chain_type(
-    llm=llm,
-    chain_type="stuff",
-    retriever=vectorstore.as_retriever(),
-    combine_documents_chain_kwargs={"prompt": custom_prompt}
-)
+llm_chain = LLMChain(llm=llm, prompt=custom_prompt)
+combine_docs_chain = StuffDocumentsChain(llm_chain=llm_chain, document_variable_name="context")
+qa_chain = RetrievalQA(retriever=vectorstore.as_retriever(), combine_documents_chain=combine_docs_chain)
 
 # 💬 Vraag
 vraag = st.text_input("Wat wil je weten?", placeholder="Bijv. Hoe kan ik mijn leasecontract overzetten?")
