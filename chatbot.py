@@ -16,12 +16,12 @@ st.markdown("""
             font-family: 'Quicksand', sans-serif;
         }
         h1 {
-            font-size: 4rem;
+            font-size: 1.8rem;
             font-weight: bold;
             color: #005F9E;
         }
         .subtitle {
-            font-size: 1rem;
+            font-size: 0.5rem;
             color: #444;
             margin-bottom: 1rem;
         }
