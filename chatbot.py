@@ -6,7 +6,7 @@ from langchain_community.embeddings import OpenAIEmbeddings
 from langchain_community.llms import OpenAI
 from langchain.prompts import PromptTemplate
 from langchain.chains.combine_documents import create_stuff_documents_chain
-from langchain.chains import RetrievalQAWithSourcesChain
+from langchain.chains import create_retrieval_qa_with_sources_chain
 
 # 🔍 Streamlit pagina setup
 st.set_page_config(page_title="Swap Assistent", page_icon="🚗", layout="wide")
@@ -96,9 +96,10 @@ Vraag: {question}
 llm = OpenAI(temperature=0, openai_api_key=openai_api_key, model_name="gpt-3.5-turbo")
 combine_docs_chain = create_stuff_documents_chain(llm=llm, prompt=custom_prompt)
 
-qa_chain = RetrievalQAWithSourcesChain(
-    combine_documents_chain=combine_docs_chain,
-    retriever=vectorstore.as_retriever()
+qa_chain = create_retrieval_qa_with_sources_chain(
+    llm=llm,
+    retriever=vectorstore.as_retriever(),
+    prompt=custom_prompt
 )
 
 # 💬 Vraag
