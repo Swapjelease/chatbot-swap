@@ -2,59 +2,48 @@ import os
 import zipfile
 import streamlit as st
 from langchain_community.vectorstores import FAISS
-from langchain_community.embeddings import OpenAIEmbeddings
-from langchain_community.llms import ChatOpenAI
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain.prompts import PromptTemplate
 from langchain.chains import RetrievalQA
 from langchain.chains.combine_documents import create_stuff_documents_chain
 
-# 🌐 Pagina instellingen
+# 📄 Zet als eerste de pagina-instellingen
 st.set_page_config(page_title="Swap Assistent", page_icon="🚗", layout="wide")
 
-# 💅 Stijl toevoegen
+# 🎨 Stijl
 st.markdown("""
     <style>
-        body { font-family: 'Open Sans', sans-serif; }
-        .swap-header {
-            display: flex;
-            align-items: center;
+        * {
+            font-family: 'Quicksand', sans-serif;
+        }
+        h1 {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #005F9E;
+        }
+        .subtitle {
+            font-size: 1rem;
+            color: #444;
             margin-bottom: 2rem;
         }
-        .swap-title h1 {
-            font-family: 'Quicksand', sans-serif;
-            font-weight: bold;
-            font-size: 1.5rem;
-            color: #005F9E;
-            margin: 0;
-        }
-        .swap-sub {
-            font-size: 1rem;
-            color: #000;
-            margin-top: 0.2rem;
-        }
-        .block-container {
-            padding-top: 2rem;
+        .stTextInput > div > input {
+            font-size: 16px;
+            padding: 0.5rem;
         }
     </style>
 """, unsafe_allow_html=True)
 
-# 🧾 Titel
-st.markdown("""
-    <div class="swap-header">
-        <div class="swap-title">
-            <h1>🚗 Stel je vraag aan onze Swap Assistent!</h1>
-            <div class="swap-sub">Snel antwoord over leasecontracten en het aanbieden van je auto</div>
-        </div>
-    </div>
-""", unsafe_allow_html=True)
+# 🧾 Titel en subtitel
+st.markdown("🚗 **Stel je vraag aan onze Swap Assistent!**")
+st.markdown("<div class='subtitle'>Snel antwoord over leasecontracten en het aanbieden van je auto</div>", unsafe_allow_html=True)
 
-# 🔐 OpenAI API Key ophalen
+# 🔐 OpenAI key
 openai_api_key = os.getenv("OPENAI_API_KEY")
 if not openai_api_key:
-    st.error("❌ OpenAI API key ontbreekt. Voeg deze toe bij 'Edit secrets'.")
+    st.error("❌ OpenAI API key ontbreekt. Voeg deze toe via 'Settings > Secrets'.")
     st.stop()
 
-# 📂 Unzip vectorstore als het nog niet uitgepakt is
+# 📦 Zip met FAISS-vectorstore uitpakken als nodig
 zip_path = "faiss_klantvragen_db.zip"
 extract_path = "faiss_klantvragen_db"
 if not os.path.exists(extract_path):
@@ -65,46 +54,30 @@ if not os.path.exists(extract_path):
         st.error("❌ Zipbestand 'faiss_klantvragen_db.zip' niet gevonden.")
         st.stop()
 
-# 📚 Laad vectorstore
+# 🧠 Vectorstore laden
 @st.cache_resource
 def load_vectorstore(api_key):
     embeddings = OpenAIEmbeddings(openai_api_key=api_key)
-    return FAISS.load_local(
-        extract_path,
-        embeddings,
-        allow_dangerous_deserialization=True
-    )
+    return FAISS.load_local(extract_path, embeddings, allow_dangerous_deserialization=True)
 
 vectorstore = load_vectorstore(openai_api_key)
 
-# 🤖 LLM instellen
-llm = ChatOpenAI(temperature=0, openai_api_key=openai_api_key, model_name="gpt-3.5-turbo")
-
-# ✨ Custom prompt met verplichte variable {context}
-prompt = PromptTemplate(
-    input_variables=["context", "question"],
-    template="""
+# ✨ Prompt
+prompt = PromptTemplate.from_template("""
 Je bent de AI-assistent van Swap Je Lease. Help gebruikers helder, vriendelijk en kort met vragen over leaseoverdracht.
 Gebruik geen moeilijke woorden en spreek de gebruiker aan met 'je'.
 Geef indien nodig concrete stappen of een voorbeeld.
 
-Context:
-{context}
+Context: {context}
+Vraag: {question}
+""")
 
-Vraag:
-{question}
-    """
-)
+# 🤖 LLM en retrieval chain
+llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0, openai_api_key=openai_api_key)
+combine_docs_chain = create_stuff_documents_chain(llm=llm, prompt=prompt)
+qa_chain = RetrievalQA(combine_documents_chain=combine_docs_chain, retriever=vectorstore.as_retriever())
 
-# 🧠 RetrievalQA instellen
-qa_chain = RetrievalQA.from_chain_type(
-    llm=llm,
-    retriever=vectorstore.as_retriever(),
-    chain_type="stuff",
-    chain_type_kwargs={"prompt": prompt}
-)
-
-# 💬 Invoerveld voor vragen
+# 💬 Vraag
 vraag = st.text_input("Wat wil je weten?", placeholder="Bijv. Hoe kan ik mijn leasecontract overzetten?")
 if vraag:
     with st.spinner("Even kijken..."):
