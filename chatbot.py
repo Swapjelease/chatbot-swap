@@ -1,4 +1,4 @@
-import os
+st.image("logo.png", width=150)
 import zipfile
 import streamlit as st
 from langchain_community.vectorstores import FAISS
