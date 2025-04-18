@@ -1,7 +1,6 @@
 import os
 import zipfile
 import streamlit as st
-st.image("logo.png", width=150)
 from langchain_community.vectorstores import FAISS
 from langchain_community.embeddings import OpenAIEmbeddings
 from langchain_community.llms import OpenAI
@@ -11,6 +10,7 @@ from langchain.chains.combine_documents import create_stuff_documents_chain
 
 # 🔍 Streamlit pagina setup
 st.set_page_config(page_title="Swap Assistent", page_icon="🚗", layout="wide")
+st.image("logo.png", width=150)
 
 # 🎨 Stijl injectie
 st.markdown("""
