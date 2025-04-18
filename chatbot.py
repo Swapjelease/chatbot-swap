@@ -16,7 +16,7 @@ st.markdown("""
             font-family: 'Quicksand', sans-serif;
         }
         h1 {
-            font-size: 8rem;
+            font-size: 2rem;
             font-weight: bold;
             color: #005F9E;
         }
@@ -33,7 +33,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # 🧾 Titel en subtitel
-st.markdown("🚗 **Stel je vraag aan onze Swap Assistent!**")
+st.markdown("<h1>🚗 Stel je vraag aan onze Swap Assistent!</h1>", unsafe_allow_html=True)
 st.markdown("<div class='subtitle'>Direct antwoord op al je vragen. Helder en zonder gedoe.</div>", unsafe_allow_html=True)
 
 # 🔐 OpenAI key
