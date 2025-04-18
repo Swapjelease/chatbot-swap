@@ -17,7 +17,7 @@ st.markdown("""
         }
         h1 {
             font-size: 2rem;
-            font-weight: bold;
+            font-weight: semibold;
             color: #005F9E;
         }
         .subtitle {
