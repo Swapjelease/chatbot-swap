@@ -27,10 +27,19 @@ st.markdown("""
         font-weight: 500;
         color: #333;
         margin-bottom: 1rem;
-    }
+
     .stTextInput > div > input {
         font-size: 16px;
         padding: 0.5rem;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        outline: none;
+        transition: box-shadow 0.2s ease-in-out;
+    }
+
+    .stTextInput > div > input:focus {
+        border: 1px solid #005F9E;
+        box-shadow: 0 0 0 2px rgba(0, 95, 158, 0.3);
     }
 </style>
 """, unsafe_allow_html=True)
