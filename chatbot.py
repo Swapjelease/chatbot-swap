@@ -85,7 +85,7 @@ qa_chain = RetrievalQA.from_chain_type(
 )
 
 # 💬 Gebruikersinput
-vraag = st.text_input("Wat wil je weten?", placeholder="Bijv. Hoe kan ik mijn leasecontract overzetten?")
+vraag = st.text_input("Wat wil je weten?", placeholder="Bijvoorbeeld hoe kan ik mijn leaseauto aanbieden?")
 if vraag:
     with st.spinner("Even kijken..."):
         resultaat = qa_chain.invoke({"query": vraag})
