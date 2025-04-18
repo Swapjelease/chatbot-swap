@@ -5,8 +5,8 @@ from langchain_community.vectorstores import FAISS
 from langchain_community.embeddings import OpenAIEmbeddings
 from langchain_community.llms import OpenAI
 from langchain.prompts import PromptTemplate
+from langchain.chains import RetrievalQA
 from langchain.chains.combine_documents import create_stuff_documents_chain
-from langchain.chains import create_retrieval_qa_with_sources_chain
 
 # 🔍 Streamlit pagina setup
 st.set_page_config(page_title="Swap Assistent", page_icon="🚗", layout="wide")
@@ -96,15 +96,16 @@ Vraag: {question}
 llm = OpenAI(temperature=0, openai_api_key=openai_api_key, model_name="gpt-3.5-turbo")
 combine_docs_chain = create_stuff_documents_chain(llm=llm, prompt=custom_prompt)
 
-qa_chain = create_retrieval_qa_with_sources_chain(
+qa_chain = RetrievalQA.from_chain_type(
     llm=llm,
     retriever=vectorstore.as_retriever(),
-    prompt=custom_prompt
+    chain_type="stuff",
+    chain_type_kwargs={"prompt": custom_prompt}
 )
 
 # 💬 Vraag
 vraag = st.text_input("Wat wil je weten?", placeholder="Bijv. Hoe kan ik mijn leasecontract overzetten?")
 if vraag:
     with st.spinner("Even kijken..."):
-        resultaat = qa_chain.invoke({"question": vraag})
-        st.success(resultaat["answer"])
+        resultaat = qa_chain.invoke({"query": vraag})
+        st.success(resultaat["result"])
