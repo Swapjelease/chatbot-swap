@@ -31,7 +31,7 @@ st.markdown("""
 
 # 🟦 Titel
 st.title("🚗 Stel je vraag aan onze Swap Assistent!")
-st.caption("Snel antwoord over leasecontracten en het aanbieden van je auto")
+st.caption("Direct antwoord op al je leasevragen – helder en zonder gedoe.")
 
 # 🔐 OpenAI API key
 openai_api_key = os.getenv("OPENAI_API_KEY")
