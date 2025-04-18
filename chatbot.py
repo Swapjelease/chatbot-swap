@@ -17,7 +17,7 @@ st.markdown("""
             font-family: 'Quicksand', sans-serif;
         }
         h1 {
-            font-size: 1.5rem;
+            font-size: 1rem;
             font-weight: 500;  /* SemiBold */
             color: #005F9E;
             margin-bottom: 0.3rem;
@@ -26,7 +26,7 @@ st.markdown("""
             font-size: 1.1rem;
             font-weight: 500;
             color: #444;
-            margin-bottom: 1.5rem;
+            margin-bottom: 0.5rem;
         }
         .stTextInput > div > input {
             font-size: 16px;
