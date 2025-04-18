@@ -2,6 +2,8 @@ streamlit
 openai
 pandas
 faiss-cpu
+langchain
+langchain-core
 langchain-community
 langchain-openai
-
+tiktoken
