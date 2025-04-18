@@ -16,14 +16,14 @@ st.markdown("""
             font-family: 'Quicksand', sans-serif;
         }
         h1 {
-            font-size: 2rem;
+            font-size: 4rem;
             font-weight: bold;
             color: #005F9E;
         }
         .subtitle {
             font-size: 1rem;
             color: #444;
-            margin-bottom: 2rem;
+            margin-bottom: 1rem;
         }
         .stTextInput > div > input {
             font-size: 16px;
