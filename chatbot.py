@@ -96,9 +96,9 @@ Vraag: {question}
 llm = OpenAI(temperature=0, openai_api_key=openai_api_key, model_name="gpt-3.5-turbo")
 combine_docs_chain = create_stuff_documents_chain(llm=llm, prompt=custom_prompt)
 
-qa_chain = RetrievalQA(
-    retriever=vectorstore.as_retriever(),
-    combine_documents_chain=combine_docs_chain
+qa_chain = RetrievalQA.from_combine_documents_chain(
+    combine_documents_chain=combine_docs_chain,
+    retriever=vectorstore.as_retriever()
 )
 
 # 💬 Vraag
