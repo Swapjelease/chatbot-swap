@@ -6,10 +6,9 @@ from langchain_community.embeddings import OpenAIEmbeddings
 from langchain_community.llms import OpenAI
 from langchain.chains import RetrievalQA
 from langchain.prompts import PromptTemplate
-from langchain.chains import LLMChain
-from langchain.chains.combine_documents.stuff import StuffDocumentsChain
+from langchain.chains.combine_documents import create_stuff_documents_chain
 
-# 🌐 Streamlit pagina setup
+# 🔍 Streamlit pagina setup
 st.set_page_config(page_title="Swap Assistent", page_icon="🚗", layout="wide")
 
 # 🎨 Stijl injectie
@@ -42,7 +41,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# 🧾 Header met logo en tekst
+# 🖼️ Header met logo en titel
 st.markdown("""
     <div class="swap-header">
         <img src="logo.png" class="swap-logo">
@@ -53,13 +52,13 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# 🔐 API-key ophalen
+# 🔐 API key ophalen
 openai_api_key = os.getenv("OPENAI_API_KEY")
 if not openai_api_key:
     st.error("❌ OpenAI API key ontbreekt. Voeg deze toe bij 'Edit secrets'.")
     st.stop()
 
-# 📦 Vectorstore uitpakken
+# 📂 Vectorstore zip uitpakken
 zip_path = "faiss_klantvragen_db.zip"
 extract_path = "faiss_klantvragen_db"
 if not os.path.exists(extract_path):
@@ -70,7 +69,7 @@ if not os.path.exists(extract_path):
         st.error("❌ Zipbestand 'faiss_klantvragen_db.zip' niet gevonden.")
         st.stop()
 
-# 📚 Laad vectorstore
+# 🧠 Laad vectorstore
 @st.cache_resource
 def load_vectorstore(api_key):
     embeddings = OpenAIEmbeddings(openai_api_key=api_key)
@@ -91,17 +90,16 @@ Geef indien nodig concrete stappen of een voorbeeld.
 Vraag: {question}
 """)
 
-# 🤖 LLM + Retrieval koppelen
+# 🧑‍🧳 LLM + Retrieval koppelen
 llm = OpenAI(temperature=0, openai_api_key=openai_api_key, model_name="gpt-3.5-turbo")
-llm_chain = LLMChain(llm=llm, prompt=custom_prompt)
-combine_docs_chain = StuffDocumentsChain.from_llm_chain(llm_chain)
+combine_docs_chain = create_stuff_documents_chain(llm=llm, prompt=custom_prompt)
 
 qa_chain = RetrievalQA(
     retriever=vectorstore.as_retriever(),
     combine_documents_chain=combine_docs_chain
 )
 
-# 📥 Gebruikersvraag
+# 💬 Vraag
 vraag = st.text_input("Wat wil je weten?", placeholder="Bijv. Hoe kan ik mijn leasecontract overzetten?")
 if vraag:
     with st.spinner("Even kijken..."):
