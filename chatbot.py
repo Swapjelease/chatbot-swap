@@ -6,51 +6,11 @@ from langchain_community.embeddings import OpenAIEmbeddings
 from langchain_community.llms import OpenAI
 from langchain.prompts import PromptTemplate
 from langchain.chains import RetrievalQA
-from langchain.chains.combine_documents import create_stuff_documents_chain
 
 # 🔍 Streamlit pagina setup
 st.set_page_config(page_title="Swap Assistent", page_icon="🚗", layout="wide")
-
-# 🎨 Stijl injectie
-st.markdown("""
-    <style>
-        body { font-family: 'Open Sans', sans-serif; }
-        .swap-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 2rem;
-        }
-        .swap-logo {
-            width: 80px;
-            margin-right: 1rem;
-        }
-        .swap-title h1 {
-            font-family: 'Quicksand', sans-serif;
-            font-size: 1.8rem;
-            color: #005F9E;
-            margin: 0;
-        }
-        .swap-sub {
-            font-size: 1rem;
-            color: #000;
-            margin-top: 0.2rem;
-        }
-        .block-container {
-            padding-top: 2rem;
-        }
-    </style>
-""", unsafe_allow_html=True)
-
-# 🖼️ Header met logo en titel
-st.markdown("""
-    <div class="swap-header">
-        <img src="logo.png" class="swap-logo">
-        <div class="swap-title">
-            <h1>Stel je vraag aan onze Swap Assistent!</h1>
-            <div class="swap-sub">Altijd snel antwoord over leaseoverdracht</div>
-        </div>
-    </div>
-""", unsafe_allow_html=True)
+st.title("🚗 Stel je vraag aan onze Swap Assistent!")
+st.caption("Altijd snel een antwoord.")
 
 # 🔐 API key ophalen
 openai_api_key = os.getenv("OPENAI_API_KEY")
@@ -92,9 +52,8 @@ Context: {context}
 Vraag: {question}
 """)
 
-# 🧑‍🧳 LLM + Retrieval koppelen
+# 🧑‍‍🧓 LLM + Retrieval koppelen
 llm = OpenAI(temperature=0, openai_api_key=openai_api_key, model_name="gpt-3.5-turbo")
-combine_docs_chain = create_stuff_documents_chain(llm=llm, prompt=custom_prompt)
 
 qa_chain = RetrievalQA.from_chain_type(
     llm=llm,
