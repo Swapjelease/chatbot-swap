@@ -81,11 +81,13 @@ def load_vectorstore(api_key):
 
 vectorstore = load_vectorstore(openai_api_key)
 
-# ✨ Prompt
+# ✨ Prompt met verplicht veld 'context'
 custom_prompt = PromptTemplate.from_template("""
 Je bent de AI-assistent van Swap Je Lease. Help gebruikers helder, vriendelijk en kort met vragen over leaseoverdracht.
 Gebruik geen moeilijke woorden en spreek de gebruiker aan met 'je'.
 Geef indien nodig concrete stappen of een voorbeeld.
+
+Context: {context}
 
 Vraag: {question}
 """)
