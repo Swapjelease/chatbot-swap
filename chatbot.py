@@ -1,7 +1,7 @@
-st.image("logo.png", width=150)
 import os
 import zipfile
 import streamlit as st
+st.image("logo.png", width=150)
 from langchain_community.vectorstores import FAISS
 from langchain_community.embeddings import OpenAIEmbeddings
 from langchain_community.llms import OpenAI
