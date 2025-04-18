@@ -94,8 +94,15 @@ Vraag: {question}
 # 🧑‍🧳 LLM + Retrieval koppelen
 llm = OpenAI(temperature=0, openai_api_key=openai_api_key, model_name="gpt-3.5-turbo")
 llm_chain = LLMChain(llm=llm, prompt=custom_prompt)
-combine_docs_chain = StuffDocumentsChain(llm_chain=llm_chain, document_variable_name="context")
-qa_chain = RetrievalQA(retriever=vectorstore.as_retriever(), combine_documents_chain=combine_docs_chain)
+combine_docs_chain = StuffDocumentsChain(
+    llm_chain=llm_chain,
+    document_variable_name="context",
+    input_key="question"
+)
+qa_chain = RetrievalQA(
+    retriever=vectorstore.as_retriever(),
+    combine_documents_chain=combine_docs_chain
+)
 
 # 💬 Vraag
 vraag = st.text_input("Wat wil je weten?", placeholder="Bijv. Hoe kan ik mijn leasecontract overzetten?")
